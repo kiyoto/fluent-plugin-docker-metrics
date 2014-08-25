@@ -63,7 +63,8 @@ module Fluent
           if data[:key] =~ /^(?:cpuacct|blkio|memory_stat_pg)/
             data[:type] = 'counter'
           end
-          data["source"] = "#{@tag_prefix}:#{@hostname}:#{id}"
+          containerName = `docker inspect --format '{{ .Name }}' #{id}`.strip[1..-1]
+          data["source"] = "#{@tag_prefix}:#{@hostname}:#{containerName}"
           mes.add(time, data)
         end
         Engine.emit_stream(tag, mes)
