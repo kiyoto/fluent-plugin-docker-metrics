@@ -45,7 +45,7 @@ module Fluent
     def list_container_ids
       `docker ps --no-trunc -q`.split /\s+/
     end
-   
+
     def emit_container_metric(id, metric_type, metric_filename, opts = {})
       path = "#{@cgroup_path}/#{metric_type}/docker/#{id}/#{metric_filename}"
       if File.exists?(path)
@@ -60,8 +60,8 @@ module Fluent
         parser.parse_each_line do |data|
           next if not data
           # TODO: address this more elegantly
-          if data[:key] =~ /^(?:cpuacct|blkio|memory_stat_pg)/
-            data[:type] = 'counter'
+          if data['key'] =~ /^(?:cpuacct|blkio|memory_stat_pg)/
+            data['type'] = 'counter'
           end
           data["source"] = "#{@tag_prefix}:#{@hostname}:#{id}"
           mes.add(time, data)
@@ -113,7 +113,7 @@ module Fluent
       def parse_line(line)
         k, v = line.split(/\s+/, 2)
         if k and v
-          { key: @metric_type + "_" + k, value: v.to_i }
+          { 'key' => @metric_type + "_" + k, 'value' => v.to_i }
         else
           nil
         end
@@ -126,7 +126,7 @@ module Fluent
       def parse_line(line)
         m = BlkioLineRegexp.match(line)
         if m
-          { key: @metric_type + "_" + m["key"].downcase, value: m["value"] }
+          { 'key' => @metric_type + "_" + m["key"].downcase, 'value' => m["value"] }
         else
           nil
         end
