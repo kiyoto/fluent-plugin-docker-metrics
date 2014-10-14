@@ -62,6 +62,8 @@ module Fluent
           # TODO: address this more elegantly
           if data['key'] =~ /^(?:cpuacct|blkio|memory_stat_pg)/
             data['type'] = 'counter'
+          else
+            data['type'] = 'gauge'
           end
           data["source"] = "#{@tag_prefix}:#{@hostname}:#{id}"
           mes.add(time, data)
