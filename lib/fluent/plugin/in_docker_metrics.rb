@@ -31,13 +31,14 @@ module Fluent
     end
 
     # Metrics collection methods
-    def get_metrics
-      list_container_ids.each do |id|
+    def get_metrics(container_ids = nil) # the arg used for testing
+      ids = container_ids || list_container_ids
+      ids.each do |id|
         emit_container_metric(id, 'memory', 'memory.stat') 
         emit_container_metric(id, 'cpuacct', 'cpuacct.stat') 
         emit_container_metric(id, 'blkio', 'blkio.io_serviced') 
         emit_container_metric(id, 'blkio', 'blkio.io_service_bytes') 
-        emit_container_metric(id, 'blkio', 'blkio.io_service_queued') 
+        emit_container_metric(id, 'blkio', 'blkio.io_queued') 
         emit_container_metric(id, 'blkio', 'blkio.sectors') 
       end
     end
