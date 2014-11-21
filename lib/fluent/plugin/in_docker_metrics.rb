@@ -5,6 +5,7 @@ module Fluent
     config_param :cgroup_path, :string, :default => '/sys/fs/cgroup'
     config_param :stats_interval, :time, :default => 60 # every minute
     config_param :tag_prefix, :string, :default => "docker"
+    config_param :container_ids, :array, :default => nil # mainly for testing
 
     def initialize
       super
@@ -31,8 +32,8 @@ module Fluent
     end
 
     # Metrics collection methods
-    def get_metrics(container_ids = nil) # the arg used for testing
-      ids = container_ids || list_container_ids
+    def get_metrics
+      ids = @container_ids || list_container_ids
       ids.each do |id|
         emit_container_metric(id, 'memory', 'memory.stat') 
         emit_container_metric(id, 'cpuacct', 'cpuacct.stat') 
@@ -49,12 +50,16 @@ module Fluent
 
     def emit_container_metric(id, metric_type, metric_filename, opts = {})
       path = "#{@cgroup_path}/#{metric_type}/docker/#{id}/#{metric_filename}"
+
       if File.exists?(path)
-        parser = if metric_type != 'blkio'
-                   KeyValueStatsParser.new(path, metric_filename.gsub('.', '_'))
-                 else 
-                   BlkioStatsParser.new(path, metric_filename.gsub('.', '_'))
-                 end
+        # the order of these two if's matters
+        if metric_filename == 'blkio.sectors'
+          parser = BlkioSectorsParser.new(path, metric_filename.gsub('.', '_'))
+        elsif metric_type == 'blkio'
+          parser = BlkioStatsParser.new(path, metric_filename.gsub('.', '_'))
+        else
+          parser = KeyValueStatsParser.new(path, metric_filename.gsub('.', '_'))
+        end
         time = Engine.now
         tag = "#{@tag_prefix}.#{metric_filename}"
         mes = MultiEventStream.new
@@ -129,7 +134,20 @@ module Fluent
       def parse_line(line)
         m = BlkioLineRegexp.match(line)
         if m
-          { 'key' => @metric_type + "_" + m["key"].downcase, 'value' => m["value"] }
+          { 'key' => @metric_type + "_" + m["key"].downcase, 'value' => m["value"].to_i }
+        else
+          nil
+        end
+      end
+    end
+
+    class BlkioSectorsParser < CGroupStatsParser
+      BlkioSectorsLineRegexp = /^(?<major>\d+):(?<minor>\d+) (?<value>\d+)/
+
+      def parse_line(line)
+        m = BlkioSectorsLineRegexp.match(line)
+        if m
+          { 'key' => @metric_type, 'value' => m["value"].to_i }
         else
           nil
         end
@@ -137,3 +155,4 @@ module Fluent
     end
   end
 end
+  
