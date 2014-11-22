@@ -35,23 +35,23 @@ module Fluent
     # Metrics collection methods
     def get_metrics
       ids = @container_ids || list_container_ids
-      ids.each do |id|
-        emit_container_metric(id, 'memory', 'memory.stat') 
-        emit_container_metric(id, 'cpuacct', 'cpuacct.stat') 
-        emit_container_metric(id, 'blkio', 'blkio.io_serviced') 
-        emit_container_metric(id, 'blkio', 'blkio.io_service_bytes') 
-        emit_container_metric(id, 'blkio', 'blkio.io_queued') 
-        emit_container_metric(id, 'blkio', 'blkio.sectors') 
+      ids.each do |id, name|
+        emit_container_metric(id, name, 'memory', 'memory.stat') 
+        emit_container_metric(id, name, 'cpuacct', 'cpuacct.stat') 
+        emit_container_metric(id, name, 'blkio', 'blkio.io_serviced') 
+        emit_container_metric(id, name, 'blkio', 'blkio.io_service_bytes') 
+        emit_container_metric(id, name, 'blkio', 'blkio.io_queued') 
+        emit_container_metric(id, name, 'blkio', 'blkio.sectors') 
       end
     end
 
     def list_container_ids
       Docker::Container.all.map do |container|
-        container.id
+        [container.id, container.info["Names"].first]
       end
     end
 
-    def emit_container_metric(id, metric_type, metric_filename, opts = {})
+    def emit_container_metric(id, name, metric_type, metric_filename, opts = {})
       path = "#{@cgroup_path}/#{metric_type}/docker/#{id}/#{metric_filename}"
 
       if File.exists?(path)
@@ -74,7 +74,9 @@ module Fluent
           else
             data['type'] = 'gauge'
           end
-          data["source"] = "#{@tag_prefix}:#{@hostname}:#{id}"
+          data["hostname"] = @hostname
+          data["id"] = id
+          data["name"] = name
           mes.add(time, data)
         end
         Engine.emit_stream(tag, mes)

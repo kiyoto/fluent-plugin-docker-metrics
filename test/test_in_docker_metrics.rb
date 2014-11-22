@@ -14,6 +14,7 @@ class TestDockerMetricsInput < MiniTest::Unit::TestCase
 
   def setup
     @container_id = 'sadais1337hacker'
+    @container_name = 'sample_container'
     @mock_metrics = read_mock_metrics
     FakeFS.activate!
     setup_proc_files
@@ -43,7 +44,7 @@ class TestDockerMetricsInput < MiniTest::Unit::TestCase
 
   def create_driver
     Fluent::Test::InputTestDriver.new(Fluent::DockerMetricsInput).configure(%[
-      container_ids ["#{@container_id}"]
+      container_ids [["#{@container_id}", "#{@container_name}"]]
       stats_interval 5s
     ])
   end
@@ -111,6 +112,8 @@ class TestDockerMetricsInput < MiniTest::Unit::TestCase
   def check_metric_type(emits, type, records)
     stats = emits.select do |tag, time, record| tag == "docker.#{type}" end
     assert_equal records.length, stats.length, "Mismatch for #{type}"
+    assert_equal @container_id, emits.first[2]["id"]
+    assert_equal @container_name, emits.first[2]["name"]
     records.each do |record|
       find_metric(stats, record)
     end

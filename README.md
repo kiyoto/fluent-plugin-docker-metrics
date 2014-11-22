@@ -30,8 +30,13 @@ to be uploaded on Rubygems
 ## Example output
 
 ```
-2014-06-26 18:16:43 +0000 docker.memory.stat: {"key":"memory_stat_total_active_anon","value":26025984,"source":"docker:precise64:b7f17c393775476bc0999cb6dcb4c6416e94b0473317375b9a245985dc6e91c5"}
-2014-06-26 18:16:43 +0000 docker.memory.stat: {"key":"memory_stat_total_inactive_file","value":131072,"source":"docker:precise64:b7f17c393775476bc0999cb6dcb4c6416e94b0473317375b9a245985dc6e91c5"}
+2014-11-22 17:48:26 +0000 docker.blkio.io_queued: {"key":"blkio_io_queued_total","value":0,"type":"counter","hostname":"precise64","id":"24f5fb3bfc429e88aa3dbacd704667899dc496067cedcfa58dd84da42e7cb3cf","name":"/world"}
+2014-11-22 17:48:26 +0000 docker.blkio.sectors: {"key":"blkio_sectors","value":136,"type":"counter","hostname":"precise64","id":"24f5fb3bfc429e88aa3dbacd704667899dc496067cedcfa58dd84da42e7cb3cf","name":"/world"}
 ```
 
-In particular, each event is a key-value pair of individual metrics. Also, it has a field whose value is "\<tag_prefix\>:\<hostname\>:\<container_id\>"
+In particular, each event is a key-value pair of individual metrics. Also, it has
+
+- `hostname` is the hostname of the Docker host
+- `id` is the ID of the container
+- `name` is the descriptive name of the container (a la `docker inspect --format '{{ .Names }}'`)
+
