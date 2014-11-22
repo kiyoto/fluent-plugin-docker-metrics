@@ -20,4 +20,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake"
   spec.add_development_dependency "fakefs"
   spec.add_runtime_dependency "fluentd"
+  spec.add_runtime_dependency "docker-api"
 end

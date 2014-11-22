@@ -10,6 +10,7 @@ module Fluent
     def initialize
       super
       require 'socket'
+      require 'docker'
       @hostname = Socket.gethostname
     end
 
@@ -45,7 +46,9 @@ module Fluent
     end
 
     def list_container_ids
-      `docker ps --no-trunc -q`.split /\s+/
+      Docker::Container.all.map do |container|
+        container.id
+      end
     end
 
     def emit_container_metric(id, metric_type, metric_filename, opts = {})
