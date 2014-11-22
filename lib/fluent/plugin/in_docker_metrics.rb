@@ -71,7 +71,8 @@ module Fluent
           else
             data['type'] = 'gauge'
           end
-          data["source"] = "#{@tag_prefix}:#{@hostname}:#{id}"
+          containerName = `docker inspect --format '{{ .Name }}' #{id}`.strip[1..-1]
+          data["source"] = "#{@tag_prefix}:#{@hostname}:#{containerName}"
           mes.add(time, data)
         end
         Engine.emit_stream(tag, mes)
