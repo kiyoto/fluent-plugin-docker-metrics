@@ -12,6 +12,7 @@ module Fluent
       require 'socket'
       require 'docker'
       @hostname = Socket.gethostname
+      @with_systemd = File.exists?("#{@cgroup_path}/systemd")
     end
 
     def configure(conf)
@@ -52,7 +53,12 @@ module Fluent
     end
 
     def emit_container_metric(id, name, metric_type, metric_filename, opts = {})
-      path = "#{@cgroup_path}/#{metric_type}/docker/#{id}/#{metric_filename}"
+
+      if @with_systemd
+        path = "#{@cgroup_path}/#{metric_type}/system.slice/docker-#{id}.scope/#{metric_filename}"
+      else
+        path = "#{@cgroup_path}/#{metric_type}/docker/#{id}/#{metric_filename}"
+      end
 
       if File.exists?(path)
         # the order of these two if's matters
@@ -160,4 +166,3 @@ module Fluent
     end
   end
 end
-  
