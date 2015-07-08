@@ -82,7 +82,7 @@ module Fluent
           end
           data["hostname"] = @hostname
           data["id"] = id
-          data["name"] = name.sub!(/^\//, '')
+          data["name"] = name.sub(/^\//, '')
           mes.add(time, data)
         end
         Engine.emit_stream(tag, mes)
