@@ -48,7 +48,7 @@ module Fluent
 
     def list_container_ids
       Docker::Container.all.map do |container|
-        [container.id, container.info["Names"].first]
+        [container.id, container.json["Name"]]
       end
     end
 
