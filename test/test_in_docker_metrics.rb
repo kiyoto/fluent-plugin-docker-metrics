@@ -1,8 +1,9 @@
 require 'fluent/test'
 require 'fluent/plugin/in_docker_metrics'
 require 'fakefs/safe'
+require 'minitest/autorun'
 
-class TestDockerMetricsInput < MiniTest::Unit::TestCase
+class TestDockerMetricsInput < Minitest::Test
   METRICS = [
       ['memory', 'memory.stat'], 
       ['cpuacct', 'cpuacct.stat'], 
