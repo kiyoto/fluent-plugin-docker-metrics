@@ -13,6 +13,7 @@ class TestDockerMetricsInput < MiniTest::Unit::TestCase
     ]
 
   def setup
+    Fluent::Test.setup
     @container_id = 'sadais1337hacker'
     @container_name = 'sample_container'
     @mock_metrics = read_mock_metrics
