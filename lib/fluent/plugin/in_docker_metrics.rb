@@ -85,7 +85,7 @@ module Fluent
           data["name"] = name.sub(/^\//, '')
           mes.add(time, data)
         end
-        Engine.emit_stream(tag, mes)
+        router.emit_stream(tag, mes)
       else
         nil
       end
