@@ -1,3 +1,5 @@
+require 'fluent/input'
+
 module Fluent
   class DockerMetricsInput < Input
     Plugin.register_input('docker_metrics', self)
