@@ -27,7 +27,7 @@ class TestDockerMetricsInput < Minitest::Test
     metrics = {}
     METRICS.each do |_, file|
       p = "#{File.dirname(File.expand_path(__FILE__))}/data/#{file}"
-      if not File.exists?(p)
+      if not File.exist?(p)
         raise IOError, p
       end
       metrics[file] = File.new(p).read

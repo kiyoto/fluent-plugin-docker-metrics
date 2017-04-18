@@ -67,7 +67,7 @@ module Fluent::Plugin
         path = "#{@cgroup_path}/#{metric_type}/docker/#{id}/#{metric_filename}"
       end
 
-      if File.exists?(path)
+      if File.exist?(path)
         # the order of these two if's matters
         if metric_filename == 'blkio.sectors'
           parser = BlkioSectorsParser.new(path, metric_filename.gsub('.', '_'))
