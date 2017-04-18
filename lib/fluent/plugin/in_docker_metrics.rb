@@ -44,12 +44,12 @@ module Fluent::Plugin
     def get_metrics
       ids = @container_ids || list_container_ids
       ids.each do |id, name|
-        emit_container_metric(id, name, 'memory', 'memory.stat') 
-        emit_container_metric(id, name, 'cpuacct', 'cpuacct.stat') 
-        emit_container_metric(id, name, 'blkio', 'blkio.io_serviced') 
-        emit_container_metric(id, name, 'blkio', 'blkio.io_service_bytes') 
-        emit_container_metric(id, name, 'blkio', 'blkio.io_queued') 
-        emit_container_metric(id, name, 'blkio', 'blkio.sectors') 
+        emit_container_metric(id, name, 'memory', 'memory.stat')
+        emit_container_metric(id, name, 'cpuacct', 'cpuacct.stat')
+        emit_container_metric(id, name, 'blkio', 'blkio.io_serviced')
+        emit_container_metric(id, name, 'blkio', 'blkio.io_service_bytes')
+        emit_container_metric(id, name, 'blkio', 'blkio.io_queued')
+        emit_container_metric(id, name, 'blkio', 'blkio.sectors')
       end
     end
 
@@ -148,7 +148,7 @@ module Fluent::Plugin
 
     class BlkioStatsParser < CGroupStatsParser
       BlkioLineRegexp = /^(?<major>\d+):(?<minor>\d+) (?<key>[^ ]+) (?<value>\d+)/
-      
+
       def parse_line(line)
         m = BlkioLineRegexp.match(line)
         if m

@@ -1,14 +1,15 @@
 require 'fluent/test'
+require 'fluent/test/driver/input'
 require 'fluent/plugin/in_docker_metrics'
 require 'fakefs/safe'
 require 'minitest/autorun'
 
 class TestDockerMetricsInput < Minitest::Test
   METRICS = [
-      ['memory', 'memory.stat'], 
-      ['cpuacct', 'cpuacct.stat'], 
-      ['blkio', 'blkio.io_serviced'], 
-      ['blkio', 'blkio.io_service_bytes'], 
+      ['memory', 'memory.stat'],
+      ['cpuacct', 'cpuacct.stat'],
+      ['blkio', 'blkio.io_serviced'],
+      ['blkio', 'blkio.io_service_bytes'],
       ['blkio', 'blkio.io_queued'],
       ['blkio', 'blkio.sectors']
     ]
@@ -29,7 +30,7 @@ class TestDockerMetricsInput < Minitest::Test
       if not File.exists?(p)
         raise IOError, p
       end
-      metrics[file] = File.new(p).read 
+      metrics[file] = File.new(p).read
     end
     metrics
   end
@@ -131,4 +132,4 @@ class TestDockerMetricsInput < Minitest::Test
   def teardown
     FakeFS.deactivate!
   end
-end 
+end
