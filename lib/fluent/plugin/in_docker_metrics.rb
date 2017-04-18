@@ -4,6 +4,8 @@ module Fluent::Plugin
   class DockerMetricsInput < Input
     Fluent::Plugin.register_input('docker_metrics', self)
 
+    helpers :timer
+
     # Define `router` method of v0.12 to support v0.10 or earlier
     unless method_defined?(:router)
       define_method("router") { Engine }
@@ -28,16 +30,8 @@ module Fluent::Plugin
     end
 
     def start
-      @loop = Coolio::Loop.new
-      tw = TimerWatcher.new(@stats_interval, true, @log, &method(:get_metrics))
-      tw.attach(@loop)
-      @thread = Thread.new(&method(:run))
-    end
-    def run
-      @loop.run
-    rescue
-      log.error "unexpected error", :error=>$!.to_s
-      log.error_backtrace
+      super
+      timer_execute(:in_docker_metrics_timer, @stats_interval, &method(:get_metrics))
     end
 
     # Metrics collection methods
@@ -99,8 +93,7 @@ module Fluent::Plugin
     end
 
     def shutdown
-      @loop.stop
-      @thread.join
+      super
     end
 
     class TimerWatcher < Coolio::TimerWatcher
