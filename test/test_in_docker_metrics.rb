@@ -1,14 +1,15 @@
 require 'fluent/test'
+require 'fluent/test/driver/input'
 require 'fluent/plugin/in_docker_metrics'
 require 'fakefs/safe'
 require 'minitest/autorun'
 
 class TestDockerMetricsInput < Minitest::Test
   METRICS = [
-      ['memory', 'memory.stat'], 
-      ['cpuacct', 'cpuacct.stat'], 
-      ['blkio', 'blkio.io_serviced'], 
-      ['blkio', 'blkio.io_service_bytes'], 
+      ['memory', 'memory.stat'],
+      ['cpuacct', 'cpuacct.stat'],
+      ['blkio', 'blkio.io_serviced'],
+      ['blkio', 'blkio.io_service_bytes'],
       ['blkio', 'blkio.io_queued'],
       ['blkio', 'blkio.sectors']
     ]
@@ -26,10 +27,10 @@ class TestDockerMetricsInput < Minitest::Test
     metrics = {}
     METRICS.each do |_, file|
       p = "#{File.dirname(File.expand_path(__FILE__))}/data/#{file}"
-      if not File.exists?(p)
+      if not File.exist?(p)
         raise IOError, p
       end
-      metrics[file] = File.new(p).read 
+      metrics[file] = File.new(p).read
     end
     metrics
   end
@@ -45,7 +46,7 @@ class TestDockerMetricsInput < Minitest::Test
   end
 
   def create_driver
-    Fluent::Test::InputTestDriver.new(Fluent::DockerMetricsInput).configure(%[
+    Fluent::Test::Driver::Input.new(Fluent::Plugin::DockerMetricsInput).configure(%[
       container_ids [["#{@container_id}", "#{@container_name}"]]
       stats_interval 5s
     ])
@@ -53,11 +54,9 @@ class TestDockerMetricsInput < Minitest::Test
 
   def test_outputs
     d = create_driver
-    d.run do
-      sleep 2
-    end
+    d.run(expect_emits: 46, timeout: 5)
 
-    emits = d.emits
+    emits = d.events
     check_metric_type(emits, 'memory.stat', [
         {"key"=>"memory_stat_cache", "value"=>32768},
         {"key"=>"memory_stat_rss", "value"=>471040},
@@ -133,4 +132,4 @@ class TestDockerMetricsInput < Minitest::Test
   def teardown
     FakeFS.deactivate!
   end
-end 
+end

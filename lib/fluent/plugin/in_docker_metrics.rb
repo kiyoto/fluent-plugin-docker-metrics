@@ -1,13 +1,12 @@
-require 'fluent/input'
+require 'socket'
+require 'docker'
+require 'fluent/plugin/input'
 
-module Fluent
+module Fluent::Plugin
   class DockerMetricsInput < Input
-    Plugin.register_input('docker_metrics', self)
+    Fluent::Plugin.register_input('docker_metrics', self)
 
-    # Define `router` method of v0.12 to support v0.10 or earlier
-    unless method_defined?(:router)
-      define_method("router") { Engine }
-    end
+    helpers :timer
 
     config_param :cgroup_path, :string, :default => '/sys/fs/cgroup'
     config_param :stats_interval, :time, :default => 60 # every minute
@@ -16,8 +15,6 @@ module Fluent
 
     def initialize
       super
-      require 'socket'
-      require 'docker'
       @hostname = Socket.gethostname
       @with_systemd = File.exists?("#{@cgroup_path}/systemd")
     end
@@ -28,28 +25,20 @@ module Fluent
     end
 
     def start
-      @loop = Coolio::Loop.new
-      tw = TimerWatcher.new(@stats_interval, true, @log, &method(:get_metrics))
-      tw.attach(@loop)
-      @thread = Thread.new(&method(:run))
-    end
-    def run
-      @loop.run
-    rescue
-      log.error "unexpected error", :error=>$!.to_s
-      log.error_backtrace
+      super
+      timer_execute(:in_docker_metrics_timer, @stats_interval, &method(:get_metrics))
     end
 
     # Metrics collection methods
     def get_metrics
       ids = @container_ids || list_container_ids
       ids.each do |id, name|
-        emit_container_metric(id, name, 'memory', 'memory.stat') 
-        emit_container_metric(id, name, 'cpuacct', 'cpuacct.stat') 
-        emit_container_metric(id, name, 'blkio', 'blkio.io_serviced') 
-        emit_container_metric(id, name, 'blkio', 'blkio.io_service_bytes') 
-        emit_container_metric(id, name, 'blkio', 'blkio.io_queued') 
-        emit_container_metric(id, name, 'blkio', 'blkio.sectors') 
+        emit_container_metric(id, name, 'memory', 'memory.stat')
+        emit_container_metric(id, name, 'cpuacct', 'cpuacct.stat')
+        emit_container_metric(id, name, 'blkio', 'blkio.io_serviced')
+        emit_container_metric(id, name, 'blkio', 'blkio.io_service_bytes')
+        emit_container_metric(id, name, 'blkio', 'blkio.io_queued')
+        emit_container_metric(id, name, 'blkio', 'blkio.sectors')
       end
     end
 
@@ -67,7 +56,7 @@ module Fluent
         path = "#{@cgroup_path}/#{metric_type}/docker/#{id}/#{metric_filename}"
       end
 
-      if File.exists?(path)
+      if File.exist?(path)
         # the order of these two if's matters
         if metric_filename == 'blkio.sectors'
           parser = BlkioSectorsParser.new(path, metric_filename.gsub('.', '_'))
@@ -76,9 +65,9 @@ module Fluent
         else
           parser = KeyValueStatsParser.new(path, metric_filename.gsub('.', '_'))
         end
-        time = Engine.now
+        time = Fluent::Engine.now
         tag = "#{@tag_prefix}.#{metric_filename}"
-        mes = MultiEventStream.new
+        mes = Fluent::MultiEventStream.new
         parser.parse_each_line do |data|
           next if not data
           # TODO: address this more elegantly
@@ -99,23 +88,7 @@ module Fluent
     end
 
     def shutdown
-      @loop.stop
-      @thread.join
-    end
-
-    class TimerWatcher < Coolio::TimerWatcher
-
-      def initialize(interval, repeat, log, &callback)
-        @callback = callback
-        @log = log
-        super(interval, repeat)
-      end
-      def on_timer
-        @callback.call
-      rescue
-        @log.error $!.to_s
-        @log.error_backtrace
-      end
+      super
     end
 
     class CGroupStatsParser
@@ -148,7 +121,7 @@ module Fluent
 
     class BlkioStatsParser < CGroupStatsParser
       BlkioLineRegexp = /^(?<major>\d+):(?<minor>\d+) (?<key>[^ ]+) (?<value>\d+)/
-      
+
       def parse_line(line)
         m = BlkioLineRegexp.match(line)
         if m
