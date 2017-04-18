@@ -1,8 +1,8 @@
-require 'fluent/input'
+require 'fluent/plugin/input'
 
-module Fluent
+module Fluent::Plugin
   class DockerMetricsInput < Input
-    Plugin.register_input('docker_metrics', self)
+    Fluent::Plugin.register_input('docker_metrics', self)
 
     # Define `router` method of v0.12 to support v0.10 or earlier
     unless method_defined?(:router)
@@ -76,9 +76,9 @@ module Fluent
         else
           parser = KeyValueStatsParser.new(path, metric_filename.gsub('.', '_'))
         end
-        time = Engine.now
+        time = Fluent::Engine.now
         tag = "#{@tag_prefix}.#{metric_filename}"
-        mes = MultiEventStream.new
+        mes = Fluent::MultiEventStream.new
         parser.parse_each_line do |data|
           next if not data
           # TODO: address this more elegantly

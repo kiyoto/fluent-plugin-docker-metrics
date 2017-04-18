@@ -45,7 +45,7 @@ class TestDockerMetricsInput < Minitest::Test
   end
 
   def create_driver
-    Fluent::Test::InputTestDriver.new(Fluent::DockerMetricsInput).configure(%[
+    Fluent::Test::Driver::Input.new(Fluent::Plugin::DockerMetricsInput).configure(%[
       container_ids [["#{@container_id}", "#{@container_name}"]]
       stats_interval 5s
     ])
@@ -53,11 +53,9 @@ class TestDockerMetricsInput < Minitest::Test
 
   def test_outputs
     d = create_driver
-    d.run do
-      sleep 2
-    end
+    d.run(expect_emits: 46, timeout: 5)
 
-    emits = d.emits
+    emits = d.events
     check_metric_type(emits, 'memory.stat', [
         {"key"=>"memory_stat_cache", "value"=>32768},
         {"key"=>"memory_stat_rss", "value"=>471040},
