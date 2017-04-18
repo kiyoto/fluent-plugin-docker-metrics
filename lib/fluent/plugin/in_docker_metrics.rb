@@ -96,21 +96,6 @@ module Fluent::Plugin
       super
     end
 
-    class TimerWatcher < Coolio::TimerWatcher
-
-      def initialize(interval, repeat, log, &callback)
-        @callback = callback
-        @log = log
-        super(interval, repeat)
-      end
-      def on_timer
-        @callback.call
-      rescue
-        @log.error $!.to_s
-        @log.error_backtrace
-      end
-    end
-
     class CGroupStatsParser
       def initialize(path, metric_type)
         raise ConfigError if not File.exists?(path)
