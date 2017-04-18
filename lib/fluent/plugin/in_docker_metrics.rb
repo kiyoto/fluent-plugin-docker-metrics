@@ -8,11 +8,6 @@ module Fluent::Plugin
 
     helpers :timer
 
-    # Define `router` method of v0.12 to support v0.10 or earlier
-    unless method_defined?(:router)
-      define_method("router") { Engine }
-    end
-
     config_param :cgroup_path, :string, :default => '/sys/fs/cgroup'
     config_param :stats_interval, :time, :default => 60 # every minute
     config_param :tag_prefix, :string, :default => "docker"
