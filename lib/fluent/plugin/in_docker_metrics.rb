@@ -1,3 +1,5 @@
+require 'socket'
+require 'docker'
 require 'fluent/plugin/input'
 
 module Fluent::Plugin
@@ -18,8 +20,6 @@ module Fluent::Plugin
 
     def initialize
       super
-      require 'socket'
-      require 'docker'
       @hostname = Socket.gethostname
       @with_systemd = File.exists?("#{@cgroup_path}/systemd")
     end
